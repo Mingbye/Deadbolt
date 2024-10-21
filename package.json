@@ -1,0 +1,29 @@
+{
+  "name": "@mingbye/deadbolt-react",
+  "version": "1.0.0",
+  "main": "index.jsx",
+  "type": "module",
+  "scripts": {},
+  "dependencies": {
+    "@emotion/react": "^11.13.3",
+    "@emotion/styled": "^11.13.0",
+    "@mui/icons-material": "^6.1.2",
+    "@mui/material": "^6.1.2",
+    "@toolpad/core": "^0.7.0",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "react-icons": "^4.11.0"
+  },
+  "keywords": [],
+  "author": "Mingbye Technologies",
+  "license": "ISC",
+  "description": "A tool to help abstract accounts management so you can focus on app productivity",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Mingbye/deadbolt-react.git"
+  },
+  "bugs": {
+    "url": "https://github.com/Mingbye/deadbolt-react/issues"
+  },
+  "homepage": "https://github.com/Mingbye/deadbolt-react#readme"
+}
