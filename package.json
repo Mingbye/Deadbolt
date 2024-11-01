@@ -1,0 +1,25 @@
+{
+  "name": "@mingbye/deadbolt",
+  "version": "1.0.0",
+  "description": "A nodejs tool to help abstract accounts management related activity so you can focus on app productivity",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Mingbye/deadbolt.git"
+  },
+  "author": "MINGBYE",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Mingbye/deadbolt/issues"
+  },
+  "homepage": "https://github.com/Mingbye/deadbolt#readme",
+  "dependencies": {
+    "body-parser": "^1.20.3",
+    "express": "^4.21.1",
+    "mime-types": "^2.1.35",
+    "route-parser": "^0.0.5"
+  }
+}
