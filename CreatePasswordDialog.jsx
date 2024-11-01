@@ -1,12 +1,11 @@
 import { Box, Button, Dialog, TextField, Typography } from "@mui/material";
-import { useDialogs } from "@toolpad/core";
 import { useRef } from "react";
-import LoadingDialog from "./LoadingDialog";
-import ConfirmForeignCode from "./ConfirmForeignCode";
 import CreatePassword from "./CreatePassword";
+import MuiDialogerProvider from "./MuiDialogerProvider";
+import Loading from "./Loading";
 
-export default function ConfirmForeignCodeDialog({ payload, open, onClose }) {
-  const dialogs = useDialogs();
+export default function ConfirmForeignCodeDialog({ payload, close }) {
+  const dialogerRef = useRef(undefined);
 
   const passwordInputRef = useRef(undefined);
   const passwordConfirmInputRef = useRef(undefined);
@@ -21,40 +20,33 @@ export default function ConfirmForeignCodeDialog({ payload, open, onClose }) {
     let passwordConfirm = passwordConfirmInputRef.current.value;
 
     if (password != passwordConfirm) {
-      await dialogs.alert("Password and confirmation mismatch");
+      await dialogerRef.current.alert("Password and confirmation mismatch");
       return;
     }
 
     let result = null;
     try {
-      result = await LoadingDialog.useDialogs(
-        dialogs,
+      result = await Loading.useDialoger(
+        dialogerRef.current,
         payload.createPassword.onSubmit(password)
       );
     } catch (e) {
       // console.log(e);
 
       if (e instanceof CreatePassword.PasswordUnallowedError) {
-        await dialogs.alert("Password unallowed");
+        await dialogerRef.current.alert("Password unallowed");
         return;
       }
 
-      await dialogs.alert("Failed. An error occurred");
+      await dialogerRef.current.alert("Failed. An error occurred");
       return;
     }
 
-    onClose(result);
+    close(result);
   }
 
   return (
-    <Dialog
-      fullWidth
-      open={open}
-      onClose={() => {}}
-      sx={{
-        boxSizing: "border-box",
-      }}
-    >
+    <MuiDialogerProvider dialogerRef={dialogerRef}>
       <div
         style={{
           display: "flex",
@@ -71,12 +63,13 @@ export default function ConfirmForeignCodeDialog({ payload, open, onClose }) {
           style={{
             width: "100%",
             display: "flex",
+            padding: "10px",
           }}
         >
           <Button
             variant="outlined"
             onClick={() => {
-              onClose();
+              close();
             }}
           >
             back
@@ -87,16 +80,14 @@ export default function ConfirmForeignCodeDialog({ payload, open, onClose }) {
               flexGrow: 1,
             }}
           />
-          <Typography></Typography>
         </div>
         <div
           style={{
             width: "100%",
           }}
         >
-          <Box
-            component="form"
-            sx={{
+          <form
+            style={{
               width: "100%",
               display: "flex",
               flexDirection: "column",
@@ -105,11 +96,20 @@ export default function ConfirmForeignCodeDialog({ payload, open, onClose }) {
               padding: "10px",
             }}
           >
+            <Typography
+              style={{
+                fontSize: "20px",
+              }}
+            >
+              Create new password
+            </Typography>
             <TextField
+              fullWidth
               inputRef={passwordInputRef}
+              type="password"
               required
               label="Password"
-              autoComplete="none"
+              autoComplete="new-password"
               onKeyDown={(ev) => {
                 if (ev.key == "Enter") {
                   ev.preventDefault();
@@ -125,9 +125,11 @@ export default function ConfirmForeignCodeDialog({ payload, open, onClose }) {
               }}
             />
             <TextField
+              fullWidth
               inputRef={passwordConfirmInputRef}
+              type="password"
               required
-              label="Confirm password"
+              label="Confirm Password"
               autoComplete="none"
               onKeyDown={(ev) => {
                 if (ev.key == "Enter") {
@@ -151,9 +153,9 @@ export default function ConfirmForeignCodeDialog({ payload, open, onClose }) {
             >
               Continue
             </Button>
-          </Box>
+          </form>
         </div>
       </div>
-    </Dialog>
+    </MuiDialogerProvider>
   );
 }

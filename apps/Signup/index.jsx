@@ -1,36 +1,29 @@
 import { Button, TextField, Typography } from "@mui/material";
-import { DialogsProvider, useDialogs } from "@toolpad/core/useDialogs";
 import { useRef } from "react";
 import ConfirmForeignCode from "../../ConfirmForeignCode";
 import SolveAntiRobotChallenge from "../../SolveAntiRobotChallenge";
 import SolveAntiRobotChallengeDialog from "../../SolveAntiRobotChallengeDialog";
 import ConfirmForeignCodeDialog from "../../ConfirmForeignCodeDialog";
-import LoadingDialog from "../../LoadingDialog";
 import CreatePassword from "../../CreatePassword";
 import CreatePasswordDialog from "../../CreatePasswordDialog";
+import Loading from "../../Loading";
+import MuiDialogerProvider from "../../MuiDialogerProvider";
 
 /**
- * props (Object) should include
- * onResult {function}
  * signupMethod {SignupMethod or Array of SignupMethods}
+ * provideOptSignin {function}
+ * onResult {function}
  */
-export default function Signup(props) {
-  return (
-    <DialogsProvider>
-      <$Signup appProps={props}></$Signup>
-    </DialogsProvider>
-  );
-}
 
-function $Signup({ appProps }) {
-  const dialogs = useDialogs();
+export default function Signup({ signupMethod, provideOptSignin, onResult }) {
+  const dialogerRef = useRef(undefined);
 
   const idInputRef = useRef(undefined);
 
   async function doSubmitId() {
     let id = idInputRef.current.value;
 
-    if (appProps.signupMethod.type.trimInput) {
+    if (signupMethod.trimInput) {
       id = id.trim();
     }
 
@@ -40,29 +33,38 @@ function $Signup({ appProps }) {
 
     let result = null;
     try {
-      result = await LoadingDialog.useDialogs(
-        dialogs,
-        appProps.signupMethod.onSubmitId(id)
+      result = await Loading.useDialoger(
+        dialogerRef.current,
+        signupMethod.onSubmitId(id)
       );
     } catch (e) {
-      await dialogs.alert("FAILED");
+      await dialogerRef.current.alert("FAILED");
       return;
     }
 
     async function handleStepResult(stepResult) {
       if (stepResult instanceof Signup.Success) {
-        appProps.onResult({
-          user: stepResult.user,
-          autoSigninToken: stepResult.autoSigninToken,
-        });
+        onResult(
+          {
+            user: stepResult.user,
+            autoSigninToken: stepResult.autoSigninToken,
+          },
+          signupMethod
+        );
 
         return;
       }
 
       if (stepResult instanceof SolveAntiRobotChallenge) {
-        const result = await dialogs.open(SolveAntiRobotChallengeDialog, {
-          solveAntiRobotChallenge: stepResult,
-        });
+        const result = await dialogerRef.current.open(
+          SolveAntiRobotChallengeDialog,
+          {
+            solveAntiRobotChallenge: stepResult,
+          },
+          {
+            fullWidth: true,
+          }
+        );
 
         if (result == null) {
           return;
@@ -73,9 +75,15 @@ function $Signup({ appProps }) {
       }
 
       if (stepResult instanceof ConfirmForeignCode) {
-        const result = await dialogs.open(ConfirmForeignCodeDialog, {
-          confirmForeignCode: stepResult,
-        });
+        const result = await dialogerRef.current.open(
+          ConfirmForeignCodeDialog,
+          {
+            confirmForeignCode: stepResult,
+          },
+          {
+            fullWidth: true,
+          }
+        );
 
         if (result == null) {
           return;
@@ -86,9 +94,15 @@ function $Signup({ appProps }) {
       }
 
       if (stepResult instanceof CreatePassword) {
-        const result = await dialogs.open(CreatePasswordDialog, {
-          createPassword: stepResult,
-        });
+        const result = await dialogerRef.current.open(
+          CreatePasswordDialog,
+          {
+            createPassword: stepResult,
+          },
+          {
+            fullWidth: true,
+          }
+        );
 
         if (result == null) {
           return;
@@ -98,124 +112,271 @@ function $Signup({ appProps }) {
         return;
       }
 
-      await dialogs.alert("AN UNEXPECTED ERROR OCCURRED");
+      await dialogerRef.current.alert("AN UNEXPECTED ERROR OCCURRED");
     }
 
     handleStepResult(result);
   }
 
   return (
-    <>
-      {(function () {
-        if (appProps.signupMethod instanceof Array) {
-          return (
-            <>
-              <Typography>Create an account</Typography>
-              <Typography>Continue with:-</Typography>
-              ---
-            </>
-          );
-        }
-
-        if (appProps.signupMethod instanceof Signup.Id) {
-          let subtitle = null;
-          let input = null;
-
-          if (
-            appProps.signupMethod.type instanceof Signup.Id.Type.EmailAddress
-          ) {
-            subtitle = "Signup with your email address";
-            input = (
-              <TextField
-                inputRef={idInputRef}
-                autoComplete="none"
-                onKeyDown={(ev) => {
-                  if (ev.key == "Enter") {
-                    let input = ev.target.value;
-
-                    if (appProps.signupMethod.type.trimInput) {
-                      input = input.trim();
-                    }
-
-                    if (input.length == 0) {
-                      return;
-                    }
-
-                    doSubmitId();
-                  }
-                }}
-              />
-            );
-          }
-
-          if (
-            appProps.signupMethod.type instanceof Signup.Id.Type.Phonenumber
-          ) {
-            subtitle = "Signup with your phonenumber";
-            input = (
-              <TextField
-                inputRef={idInputRef}
-                autoComplete="none"
-                onKeyDown={(ev) => {
-                  if (ev.key == "Enter") {
-                    let input = ev.target.value;
-
-                    if (appProps.signupMethod.type.trimInput) {
-                      input = input.trim();
-                    }
-
-                    if (input.length == 0) {
-                      return;
-                    }
-
-                    doSubmitId();
-                  }
-                }}
-              />
-            );
-          }
-
-          return (
-            <>
-              <Typography>Create an account</Typography>
-              {subtitle != null ? subtitle : null}
-              {input != null ? input : null}
-              <Button
-                onClick={() => {
-                  doSubmitId();
-                }}
-              >
-                Continue
-              </Button>
-
-              {appProps.provideOptSignin != null ? (
-                <>
-                  <Button
-                    onClick={() => {
-                      appProps.provideOptSignin();
+    <MuiDialogerProvider dialogerRef={dialogerRef}>
+      <div
+        style={{
+          width: "100%",
+          height: "100%",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          background: "rgba(240,240,240,.5)",
+        }}
+      >
+        <div
+          style={{
+            width: "100%",
+            maxWidth: "400px",
+            height: "100%",
+            maxHeight: "580px",
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            justifyContent: "center",
+            overflow: "auto",
+            background: "white",
+            boxShadow:
+              "0px 2px 1px -1px rgba(0,0,0,0.2),0px 1px 1px 0px rgba(0,0,0,0.14),0px 1px 3px 0px rgba(0,0,0,0.12)",
+          }}
+        >
+          {(function () {
+            if (signupMethod instanceof Array) {
+              return (
+                <div
+                  style={{
+                    width: "100%",
+                    height: "100%",
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: "15px",
+                    padding: "10px 20px",
+                  }}
+                >
+                  <div
+                    style={{
+                      width: "100%",
+                      height: 0,
+                      flexGrow: 1,
+                      overflow: "auto",
+                      display: "flex",
+                      flexDirection: "column",
+                      gap: "15px",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      padding: "10px 20px",
                     }}
                   >
-                    sign-in
+                    <Typography
+                      style={{
+                        // fontWeight: "bold",
+                        fontSize: "25px",
+                        lineHeight: 1,
+                      }}
+                    >
+                      Sign-up
+                    </Typography>
+                    <Typography
+                      style={{
+                        color: "grey",
+                      }}
+                    >
+                      Choose how you want to sign-up
+                    </Typography>
+                    {(function () {
+                      if (signupMethod.length == 0) {
+                        return (
+                          <Typography color="rgba(150,0,0,1)" align="center">
+                            No sign-up methods available
+                          </Typography>
+                        );
+                      }
+
+                      return signupMethod.map((item, i) => {
+                        if (item instanceof Signup.Id) {
+                          if (item.variant == "emailAddress") {
+                            return (
+                              <Button
+                                key={i}
+                                fullWidth
+                                variant="contained"
+                                onClick={() => {}}
+                              >
+                                continue with email address
+                              </Button>
+                            );
+                          }
+
+                          return (
+                            <Button
+                              key={i}
+                              fullWidth
+                              variant="contained"
+                              onClick={() => {}}
+                            >
+                              continue with id
+                            </Button>
+                          );
+                        }
+
+                        return null;
+                      });
+                    })()}
+                  </div>
+                  {provideOptSignin != null ? (
+                    <div
+                      style={{
+                        width: "100%",
+                        display: "flex",
+                        flexDirection: "column",
+                        gap: "5px",
+                        alignItems: "center",
+                        margin: "15px 0",
+                      }}
+                    >
+                      <Typography>Already have an account?</Typography>
+                      <Button
+                        onClick={() => {
+                          provideOptSignin();
+                        }}
+                      >
+                        go to sign-in
+                      </Button>
+                    </div>
+                  ) : null}
+                </div>
+              );
+            }
+
+            if (signupMethod instanceof Signup.Id) {
+              return (
+                <form
+                  style={{
+                    width: "100%",
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: "15px",
+                    alignItems: "center",
+                    padding: "10px 20px",
+                  }}
+                >
+                  <Typography
+                    style={{
+                      // fontWeight: "bold",
+                      fontSize: "25px",
+                      lineHeight: 1,
+                    }}
+                  >
+                    Sign-up
+                  </Typography>
+
+                  {(function () {
+                    //subtitle
+                    if (signupMethod.variant == "emailAddress") {
+                      return (
+                        <Typography
+                          style={{
+                            color: "grey",
+                          }}
+                        >
+                          Continue with your email address
+                        </Typography>
+                      );
+                    }
+
+                    return null;
+                  })()}
+
+                  <TextField
+                    fullWidth
+                    inputRef={idInputRef}
+                    label={
+                      signupMethod.variant == "emailAddress"
+                        ? "Email Address"
+                        : "Id"
+                    }
+                    autoComplete={
+                      signupMethod.variant == "emailAddress"
+                        ? "email"
+                        : "username"
+                    }
+                    onKeyDown={(ev) => {
+                      if (ev.key == "Enter") {
+                        let input = ev.target.value;
+
+                        if (signupMethod.trimInput) {
+                          input = input.trim();
+                        }
+
+                        if (input.length == 0) {
+                          return;
+                        }
+
+                        doSubmitId();
+                      }
+                    }}
+                  />
+
+                  <Button
+                    type="submit"
+                    fullWidth
+                    variant="contained"
+                    onClick={(ev) => {
+                      ev.preventDefault();
+                      doSubmitId();
+                    }}
+                  >
+                    sign-up
                   </Button>
-                </>
-              ) : null}
-            </>
-          );
-        }
 
-        if (appProps.signupMethod instanceof Signup.GoogleAccounts) {
-          return <Button>Continue with google</Button>;
-        }
+                  {provideOptSignin != null ? (
+                    <div
+                      style={{
+                        width: "100%",
+                        display: "flex",
+                        flexDirection: "column",
+                        gap: "5px",
+                        alignItems: "center",
+                        margin: "15px 0",
+                      }}
+                    >
+                      <Typography>Already have an account?</Typography>
+                      <Button
+                        onClick={() => {
+                          provideOptSignin();
+                        }}
+                      >
+                        go to sign-in
+                      </Button>
+                    </div>
+                  ) : null}
+                </form>
+              );
+            }
 
-        return null;
-      })()}
-    </>
+            // if (signupMethod instanceof Signup.GoogleAccounts) {
+            //   return <Button>Continue with google</Button>;
+            // }
+
+            return null;
+          })()}
+        </div>
+      </div>
+    </MuiDialogerProvider>
   );
 }
 
 Signup.Id = class {
-  constructor({ type, onSubmitId }) {
-    this.type = type;
+  constructor({ variant, trimInput, autoSignin, onSubmitId }) {
+    this.variant = variant;
+    this.trimInput = trimInput;
+    this.autoSignin = autoSignin;
     this.onSubmitId = onSubmitId;
   }
 };
@@ -224,45 +385,18 @@ Signup.GoogleAccounts = class {
   constructor() {}
 };
 
-Signup.Id.Type = class {
-  constructor(label, helperText, trimInput) {
-    this.label = label;
-    this.helperText = helperText;
-    this.trimInput = trimInput;
-  }
-};
-
-Signup.Id.Type.EmailAddress = class extends Signup.Id.Type {
-  constructor() {
-    super(null, null, true);
-  }
-};
-
-Signup.Id.Type.Phonenumber = class extends Signup.Id.Type {
-  constructor() {
-    super(null, null, true);
-  }
-};
-
 Signup.Id.SolveAntiRobotChallenge = class {
   constructor({ onSolutionToken }) {
     this.onSolutionToken = onSolutionToken;
   }
 };
 
-Signup.Id.IdMalformedError = class {};
-
-Signup.Id.IdUnavailableError = class {};
-
-Signup.Id.CreatePassword = class {
-  constructor({ id, nextStepToken, onPassword }) {
-    this.id = id;
-    this.nextStepToken = nextStepToken;
-    this.onPassword = onPassword;
+Signup.Id.RejectedError = class {
+  constructor({ variant, customMessage }) {
+    this.variant = variant;
+    this.customMessage = customMessage;
   }
 };
-
-Signup.Id.PasswordTooShortError = class {};
 
 Signup.Success = class {
   constructor({ user, autoSigninToken }) {

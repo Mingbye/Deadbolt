@@ -11,13 +11,12 @@ export default class SolveAntiRobotChallenge {
   }
 }
 
-SolveAntiRobotChallenge.SolutionIncorrectError = class {
-  constructor(challengeHasBecomeInvalid = true) {
-    this.challengeHasBecomeInvalid = challengeHasBecomeInvalid;
+SolveAntiRobotChallenge.RejectedError = class {
+  constructor({ variant, customMessage }) {
+    this.variant = variant;
+    this.customMessage = customMessage;
   }
 };
-
-SolveAntiRobotChallenge.ChallengeExpiredError = class {};
 
 SolveAntiRobotChallenge.Challenge = class {
   constructor({ ref, solvable }) {

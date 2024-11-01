@@ -1,11 +1,12 @@
 import { Box, Button, Dialog, TextField, Typography } from "@mui/material";
 import { useDialogs } from "@toolpad/core";
 import { useRef } from "react";
-import LoadingDialog from "./LoadingDialog";
+import Loading from "./Loading";
 import ConfirmForeignCode from "./ConfirmForeignCode";
+import MuiDialogerProvider from "./MuiDialogerProvider";
 
-export default function ConfirmForeignCodeDialog({ payload, open, onClose }) {
-  const dialogs = useDialogs();
+export default function ConfirmForeignCodeDialog({ payload, close }) {
+  const dialogerRef = useRef(undefined);
 
   const codeInputRef = useRef(undefined);
 
@@ -22,39 +23,32 @@ export default function ConfirmForeignCodeDialog({ payload, open, onClose }) {
 
     let result = null;
     try {
-      result = await LoadingDialog.useDialogs(
-        dialogs,
+      result = await Loading.useDialoger(
+        dialogerRef.current,
         payload.confirmForeignCode.onSubmit(code)
       );
     } catch (e) {
       // console.log(e);
 
       if (e instanceof ConfirmForeignCode.InvalidCodeError) {
-        await dialogs.alert("Incorect, match failed");
+        await dialogerRef.current.alert("Incorect, match failed");
         return;
       }
 
       if (e instanceof ConfirmForeignCode.ExpiredCodeError) {
-        await dialogs.alert("Too late, code expired");
+        await dialogerRef.current.alert("Too late, code expired");
         return;
       }
 
-      await dialogs.alert("Failed. An error occurred");
+      await dialogerRef.current.alert("Failed. An error occurred");
       return;
     }
 
-    onClose(result);
+    close(result);
   }
 
   return (
-    <Dialog
-      fullWidth
-      open={open}
-      onClose={() => {}}
-      sx={{
-        boxSizing: "border-box",
-      }}
-    >
+    <MuiDialogerProvider dialogerRef={dialogerRef}>
       <div
         style={{
           display: "flex",
@@ -77,7 +71,7 @@ export default function ConfirmForeignCodeDialog({ payload, open, onClose }) {
           <Button
             variant="outlined"
             onClick={() => {
-              onClose();
+              close();
             }}
           >
             back
@@ -105,14 +99,11 @@ export default function ConfirmForeignCodeDialog({ payload, open, onClose }) {
             }}
           >
             {(function () {
-              if (
-                payload.confirmForeignCode.codePlacement instanceof
-                ConfirmForeignCode.CodePlacement.SentInEmail
-              ) {
+              if (payload.confirmForeignCode.codeWhere == "sentInEmail") {
                 return (
                   <Typography>
                     Input code sent to:{" "}
-                    {payload.confirmForeignCode.codePlacement.identifier}
+                    {payload.confirmForeignCode.codeWhereIdentifier}
                   </Typography>
                 );
               }
@@ -157,6 +148,6 @@ export default function ConfirmForeignCodeDialog({ payload, open, onClose }) {
           </form>
         </div>
       </div>
-    </Dialog>
+    </MuiDialogerProvider>
   );
 }

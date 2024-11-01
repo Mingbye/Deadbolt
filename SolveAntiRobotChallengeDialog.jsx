@@ -7,7 +7,7 @@ import {
 import { useDialogs } from "@toolpad/core";
 import { useState, useEffect } from "react";
 import PromiseBuilder from "./PromiseBuilder";
-import LoadingDialog from "./LoadingDialog";
+import Loading from "./Loading";
 
 export default function SolveAntiRobotChallengeDialog({
   payload,
@@ -120,7 +120,7 @@ export default function SolveAntiRobotChallengeDialog({
                       promise,
                       { message, cancellable } = {}
                     ) => {
-                      return await LoadingDialog.useDialogs(dialogs, promise, {
+                      return await Loading.useDialogs(dialogs, promise, {
                         message,
                         cancellable,
                       });

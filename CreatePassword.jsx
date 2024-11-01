@@ -1,7 +1,12 @@
 export default class CreatePassword {
-  constructor({  onSubmit }) {
+  constructor({ onSubmit }) {
     this.onSubmit = onSubmit;
   }
 }
 
-CreatePassword.PasswordUnallowedError = class {};
+CreatePassword.RejectedError = class {
+  constructor({ variant, customMessage }) {
+    this.variant = variant;
+    this.customMessage = customMessage;
+  }
+};
