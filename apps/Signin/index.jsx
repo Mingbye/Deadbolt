@@ -6,6 +6,8 @@ import SolveAntiRobotChallengeDialog from "../../SolveAntiRobotChallengeDialog";
 import ConfirmForeignCode from "../../ConfirmForeignCode";
 import ConfirmForeignCodeDialog from "../../ConfirmForeignCodeDialog";
 import Loading from "../../Loading";
+import CreatePassword from "../../CreatePassword";
+import CreatePasswordDialog from "../../CreatePasswordDialog";
 
 /**
  * onResult {function}
@@ -58,6 +60,14 @@ export default function Signin({ signinMethod, onResult, provideOptSignup }) {
           },
           {
             fullWidth: true,
+            sx: {
+              "& .MuiDialog-container": {
+                "& .MuiPaper-root": {
+                  // width: "100%",
+                  maxWidth: "450px",
+                },
+              },
+            },
           }
         );
 
@@ -77,6 +87,41 @@ export default function Signin({ signinMethod, onResult, provideOptSignup }) {
           },
           {
             fullWidth: true,
+            sx: {
+              "& .MuiDialog-container": {
+                "& .MuiPaper-root": {
+                  // width: "100%",
+                  maxWidth: "450px",
+                },
+              },
+            },
+          }
+        );
+
+        if (result == null) {
+          return;
+        }
+
+        handleStepResult(result);
+        return;
+      }
+
+      if (stepResult instanceof CreatePassword) {
+        const result = await dialogerRef.current.open(
+          CreatePasswordDialog,
+          {
+            createPassword: stepResult,
+          },
+          {
+            fullWidth: true,
+            sx: {
+              "& .MuiDialog-container": {
+                "& .MuiPaper-root": {
+                  // width: "100%",
+                  maxWidth: "450px",
+                },
+              },
+            },
           }
         );
 
@@ -98,7 +143,22 @@ export default function Signin({ signinMethod, onResult, provideOptSignup }) {
         signinMethod.onSubmitId(id, password)
       );
     } catch (e) {
-      await dialogerRef.current.alert("FAILED");
+      if (e instanceof Signin.Id.RejectedError) {
+        if (e.variant == `noMatch`) {
+          await dialogerRef.current.alert(
+            `Sign-in failed. Ensure valid sign-in details. ${e.customMessage || ``}`.trim()
+          );
+          return;
+        }
+
+        await dialogerRef.current.alert(
+          `Sign-in rejected. ${e.customMessage || ``}`.trim()
+        );
+        return;
+      }
+
+      await dialogerRef.current.alert("Failed. An unexpected error was thrown");
+      console.error(e);
       return;
     }
 
@@ -187,7 +247,7 @@ export default function Signin({ signinMethod, onResult, provideOptSignup }) {
 
                       return signinMethod.map((item, i) => {
                         if (item instanceof Signin.Id) {
-                          if (item.variant == "email") {
+                          if (item.variant == "emailAddress") {
                             return (
                               <Button
                                 key={i}
@@ -267,7 +327,7 @@ export default function Signin({ signinMethod, onResult, provideOptSignup }) {
 
                   {(function () {
                     //subtitle
-                    if (signinMethod.variant == "email") {
+                    if (signinMethod.variant == "emailAddress") {
                       return (
                         <Typography
                           style={{
@@ -286,10 +346,14 @@ export default function Signin({ signinMethod, onResult, provideOptSignup }) {
                     fullWidth
                     inputRef={idInputRef}
                     label={
-                      signinMethod.variant == "email" ? "Email Address" : "Id"
+                      signinMethod.variant == "emailAddress"
+                        ? "Email Address"
+                        : "Id"
                     }
                     autoComplete={
-                      signinMethod.variant == "email" ? "email" : "username"
+                      signinMethod.variant == "emailAddress"
+                        ? "email"
+                        : "username"
                     }
                     onKeyDown={(ev) => {
                       if (ev.key == "Enter") {
@@ -404,6 +468,11 @@ Signin.Id.SolveAntiRobotChallenge = class {
 };
 
 Signin.Id.RejectedError = class {
+  /**
+   * @param {Object} param;
+   * @param {"noMatch"} [param.variant]
+   * @param {String} [param.customMessage]
+   */
   constructor({ variant, customMessage }) {
     this.variant = variant;
     this.customMessage = customMessage;

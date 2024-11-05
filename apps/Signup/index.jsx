@@ -38,7 +38,43 @@ export default function Signup({ signupMethod, provideOptSignin, onResult }) {
         signupMethod.onSubmitId(id)
       );
     } catch (e) {
-      await dialogerRef.current.alert("FAILED");
+      if (e instanceof Signup.Id.RejectedError) {
+        if (e.variant == `inUseOrUnavailable`) {
+          if (signupMethod.variant == "emailAddress") {
+            await dialogerRef.current.alert(
+              `Email address in use or unvailable. ${e.customMessage || ``}`.trim()
+            );
+            return;
+          }
+
+          await dialogerRef.current.alert(
+            `Id in use or unvailable. ${e.customMessage || ``}`.trim()
+          );
+          return;
+        }
+
+        if (e.variant == `invalid`) {
+          if (signupMethod.variant == "emailAddress") {
+            await dialogerRef.current.alert(
+              `Invalid email address provided. ${e.customMessage || ``}`.trim()
+            );
+            return;
+          }
+
+          await dialogerRef.current.alert(
+            `Ivalid id provided. ${e.customMessage || ``}`.trim()
+          );
+          return;
+        }
+
+        await dialogerRef.current.alert(
+          `Sign-up rejected. ${e.customMessage || ``}`.trim()
+        );
+        return;
+      }
+
+      await dialogerRef.current.alert("Failed. An unexpected error was thrown");
+      console.error(e);
       return;
     }
 
@@ -63,6 +99,14 @@ export default function Signup({ signupMethod, provideOptSignin, onResult }) {
           },
           {
             fullWidth: true,
+            sx: {
+              "& .MuiDialog-container": {
+                "& .MuiPaper-root": {
+                  // width: "100%",
+                  maxWidth: "450px",
+                },
+              },
+            },
           }
         );
 
@@ -82,6 +126,14 @@ export default function Signup({ signupMethod, provideOptSignin, onResult }) {
           },
           {
             fullWidth: true,
+            sx: {
+              "& .MuiDialog-container": {
+                "& .MuiPaper-root": {
+                  // width: "100%",
+                  maxWidth: "450px",
+                },
+              },
+            },
           }
         );
 
@@ -101,6 +153,14 @@ export default function Signup({ signupMethod, provideOptSignin, onResult }) {
           },
           {
             fullWidth: true,
+            sx: {
+              "& .MuiDialog-container": {
+                "& .MuiPaper-root": {
+                  // width: "100%",
+                  maxWidth: "450px",
+                },
+              },
+            },
           }
         );
 
@@ -392,6 +452,11 @@ Signup.Id.SolveAntiRobotChallenge = class {
 };
 
 Signup.Id.RejectedError = class {
+  /**
+   * @param {Object} param;
+   * @param {"inUseOrUnavailable" | "invalid"} [param.variant]
+   * @param {String} [param.customMessage]
+   */
   constructor({ variant, customMessage }) {
     this.variant = variant;
     this.customMessage = customMessage;

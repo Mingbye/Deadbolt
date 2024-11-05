@@ -31,14 +31,36 @@ export default function ConfirmForeignCodeDialog({ payload, close }) {
         payload.createPassword.onSubmit(password)
       );
     } catch (e) {
-      // console.log(e);
+      if (e instanceof CreatePassword.RejectedError) {
+        if (e.variant == `lengthShort`) {
+          await dialogerRef.current.alert(
+            `Password is a little too short. ${e.customMessage || ``}`.trim()
+          );
+          return;
+        }
 
-      if (e instanceof CreatePassword.PasswordUnallowedError) {
-        await dialogerRef.current.alert("Password unallowed");
+        if (e.variant == `lengthLong`) {
+          await dialogerRef.current.alert(
+            `Password is a little too long. ${e.customMessage || ``}`.trim()
+          );
+          return;
+        }
+
+        if (e.variant == `weak`) {
+          await dialogerRef.current.alert(
+            `A stronger password is required. ${e.customMessage || ``}`.trim()
+          );
+          return;
+        }
+
+        await dialogerRef.current.alert(
+          `Password rejected. ${e.customMessage || ``}`.trim()
+        );
         return;
       }
 
-      await dialogerRef.current.alert("Failed. An error occurred");
+      await dialogerRef.current.alert("Failed. An unexpected error was thrown");
+      console.error(e);
       return;
     }
 
@@ -72,7 +94,7 @@ export default function ConfirmForeignCodeDialog({ payload, close }) {
               close();
             }}
           >
-            back
+            cancel
           </Button>
           <div
             style={{

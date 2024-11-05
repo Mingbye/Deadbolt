@@ -8,6 +8,11 @@ export default class ConfirmForeignCode {
 }
 
 ConfirmForeignCode.RejectedError = class {
+  /**
+   * @param {Object} param;
+   * @param {"invalid" | "expired"} [param.variant]
+   * @param {String} [param.customMessage]
+   */
   constructor({ variant, customMessage }) {
     this.variant = variant;
     this.customMessage = customMessage;

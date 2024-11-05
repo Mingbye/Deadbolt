@@ -1,4 +1,4 @@
-import { Box, Button, Dialog, TextField, Typography } from "@mui/material";
+import { Box, Button, Chip, TextField, Typography } from "@mui/material";
 import { useDialogs } from "@toolpad/core";
 import { useRef } from "react";
 import Loading from "./Loading";
@@ -28,19 +28,30 @@ export default function ConfirmForeignCodeDialog({ payload, close }) {
         payload.confirmForeignCode.onSubmit(code)
       );
     } catch (e) {
-      // console.log(e);
+      if (e instanceof ConfirmForeignCode.RejectedError) {
+        if (e.variant == `invalid`) {
+          await dialogerRef.current.alert(
+            `Invalid code. ${e.customMessage || ``}`.trim()
+          );
+          return;
+        }
 
-      if (e instanceof ConfirmForeignCode.InvalidCodeError) {
-        await dialogerRef.current.alert("Incorect, match failed");
+        if (e.variant == `expired`) {
+          await dialogerRef.current.alert(
+            `Code expired. ${e.customMessage || ``}`.trim()
+          );
+          //confirm to send a new one
+          return;
+        }
+
+        await dialogerRef.current.alert(
+          `Code rejected. ${e.customMessage || ``}`.trim()
+        );
         return;
       }
 
-      if (e instanceof ConfirmForeignCode.ExpiredCodeError) {
-        await dialogerRef.current.alert("Too late, code expired");
-        return;
-      }
-
-      await dialogerRef.current.alert("Failed. An error occurred");
+      await dialogerRef.current.alert("Failed. An unexpected error was thrown");
+      console.error(e);
       return;
     }
 
@@ -74,7 +85,7 @@ export default function ConfirmForeignCodeDialog({ payload, close }) {
               close();
             }}
           >
-            back
+            close
           </Button>
           <div
             style={{
@@ -101,10 +112,36 @@ export default function ConfirmForeignCodeDialog({ payload, close }) {
             {(function () {
               if (payload.confirmForeignCode.codeWhere == "sentInEmail") {
                 return (
-                  <Typography>
-                    Input code sent to:{" "}
-                    {payload.confirmForeignCode.codeWhereIdentifier}
-                  </Typography>
+                  <div
+                    style={{
+                      width: "100%",
+                      display: "flex",
+                      flexDirection: "column",
+                      alignItems: "center",
+                      // gap: "15px",
+                      // padding: "10px",
+                    }}
+                  >
+                    <Typography>verify code sent in email</Typography>
+                    {payload.confirmForeignCode.codeWhereIdentifier !=
+                    undefined ? (
+                      <>
+                        <Typography
+                          style={
+                            {
+                              // fontWeight: "bold",
+                              color:"grey",
+                            }
+                          }
+                        >
+                          {payload.confirmForeignCode.codeWhereIdentifier}
+                        </Typography>
+                        {/* <Chip
+                          label={payload.confirmForeignCode.codeWhereIdentifier}
+                        /> */}
+                      </>
+                    ) : null}
+                  </div>
                 );
               }
 
