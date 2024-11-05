@@ -6,15 +6,32 @@ const Signup = require("./modules/Signup/index");
 const bodyParser = require("body-parser");
 const mimeTypes = require("mime-types");
 
+/**
+ * @class
+ * Create instance of the Deadbolt class to introduce the structure of your app and obtain access to the different functionalities of deadbolt
+
+ * @constructor
+ * @param {{
+ *  appName: string,
+ *  modules:{
+ *    signup: Deadbolt.Signup,
+ *    signin: Deadbolt.Signin
+ *  },
+ * }} obj
+ */
 class Deadbolt {
   #appName;
   #modules;
 
-  constructor({ appName=undefined, modules } = {}) {
-    this.#appName=appName;
+  constructor({ appName = undefined, modules } = {}) {
+    this.#appName = appName;
     this.#modules = modules;
   }
 
+  /**
+   * Get express function to handle requests at the specified route
+   * @returns {function} - an expressjs' router function
+   */
   get express() {
     return (requestObj, responder, next) => {
       function routeRequestObj(method, route, callback) {
@@ -849,6 +866,12 @@ class Deadbolt {
 // Deadbolt.SolveAntiRobotChallenge.RejectedError = class {};
 
 Deadbolt.ConfirmForeignCode = class {
+  /**
+   * @param {Object} obj
+   * @param {string} obj.codeWhere
+   * @param {string} obj.codeWhereIdentifier
+   * @param {() => Promise<string>} obj.createStepPassToken
+   */
   constructor({ codeWhere, codeWhereIdentifier, createStepPassToken }) {
     this.codeWhere = codeWhere;
     this.codeWhereIdentifier = codeWhereIdentifier;
@@ -857,6 +880,11 @@ Deadbolt.ConfirmForeignCode = class {
 };
 
 Deadbolt.ConfirmForeignCode.RejectedError = class {
+  /**
+   * @param {Object} obj
+   * @param {"invalid" | "expired"} [obj.variant]
+   * @param {string} [obj.customMessage]
+   */
   constructor({ variant, customMessage }) {
     this.variant = variant;
     this.customMessage = customMessage;
@@ -864,12 +892,21 @@ Deadbolt.ConfirmForeignCode.RejectedError = class {
 };
 
 Deadbolt.CreatePassword = class {
+  /**
+   * @param {Object} obj
+   * @param {() => Promise<string>} obj.createStepPassToken
+   */
   constructor({ createStepPassToken }) {
     this.createStepPassToken = createStepPassToken;
   }
 };
 
 Deadbolt.CreatePassword.RejectedError = class {
+  /**
+   * @param {Object} obj
+   * @param {"lengthShort" | "lengthLong" | "weak"} [obj.variant]
+   * @param {string} [obj.customMessage]
+   */
   constructor({ variant, customMessage }) {
     this.variant = variant;
     this.customMessage = customMessage;

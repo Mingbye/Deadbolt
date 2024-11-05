@@ -20,6 +20,11 @@ class Id {
 }
 
 Id.RejectedError = class {
+  /**
+   * @param {Object} param;
+   * @param {"inUseOrUnavailable" | "invalid"} [param.variant]
+   * @param {String} [param.customMessage]
+   */
   constructor({ variant, customMessage }) {
     this.variant = variant;
     this.customMessage = customMessage;
