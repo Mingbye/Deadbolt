@@ -80,7 +80,7 @@ new Deadbolt.Signup.Id({
             user: `USER-REF`,
             createAutoSigninToken: async () => {
                 return `TOKEN-REF`;
-            },
+            }, //provide createAutoSigninToken: null if you want to disable auto sign-in
         });
 
         //case: you want whoever is signing up to create a password
@@ -222,10 +222,25 @@ const express = require("express");
 const Deadbolt = require("@mingbye/deadbolt");
 
 const expressApp = express();
-const deadbolt = new Deadbolt(...);
 
-expressApp.use("/deadbolt/app", deadbolt.express);
-//functions reaching deadbolt will be served at /deadbolt/app
+const deadboltUser = new Deadbolt(...);
+const deadboltCreator = new Deadbolt(...);
+const deadboltDataAdmin = new Deadbolt(...);
+
+//samples ...
+
+expressApp.use("/deadbolt-app", deadboltUser.express);
+//functions reaching deadboltUser will be served at /deadbolt-app
+
+expressApp.use("/deadbolt_creator", deadboltCreator.express);
+//....
+
+expressApp.use("/deadbolt/admin/data", deadboltDataAdmin.express);
+//....
+
+
+//using Deadbolt Auto, you can for instance have a user sign-up at /deadbolt-app/auto/#signup
+//or a data admin sign-in at /deadbolt/admin/data/auto/#signin
 
 expressApp.listen(...)
 ```
@@ -234,17 +249,58 @@ expressApp.listen(...)
 
 Depending on whether you are serving deadbolt with express for example, Deadbolt Auto is provided within as a web app that you can link your users to so as to interact with your app.
 
-#### Examples
+The table below shows different url-suffix-es you can use to link the user to different functionalities of Deadbolt Auto depending on your objective.
 
-To let one sign-in to your system with the express example given above, open url in the browser:
+Using the express example above (assuming server at address <https://myapp.com>), sample links from the table below can be
 
-> http://localhost/deadbolt/app/auto/#signin
+1. <https://myapp.com/deadbolt_creator/auto/#signin>
 
-or with the respective address to your server.
-
-Use
-> http://localhost/deadbolt/app/auto/#signin?allowSignup=true
-
-to allow the option to create a new account then sign-in
+2. <https://myapp.com/deadbolt-app/auto/#signup?signin=true>
 
 
+| objective | url-suffix | result |
+|-|-|-|
+| Want one to sign-in only | /auto/#signin | SigninResult: {user:string,signin:string} |
+| Want one to sign-in (and can create a new account) [default to sign-in] | /auto/#signin?optSignup=true | SigninResult: {user:string,signin:string} |
+| Want one to sign-in (and can create a new account) [default to sign-up] | /auto/#signup?signin=true | SigninResult: {user:string,signin:string} |
+| Want one to sign-up only (the result [user and autoSign] can still be used to invoke auto sign-in afterwards) | /auto/#signup | SignupResult: {user:string,autoSignin:string?} |
+
+#### Getting the Deadbolt Auto result - Examples
+
+If opening url in iframe :-
+
+```js
+iframeElement.src=`https://myapp.com/something/auto/#signin?optSignup=true&resolve=parent`;
+
+window.addEvenListener(`message`, (ev) => {
+    if(ev.source == iframeElement.contentWindow){
+        if(ev.origin !== "https://myapp.com"){
+            return;
+        }
+
+        const signinResult = ev.data;
+        //.... const {user, signin} = signinResult;
+    }
+});
+
+//"resolve" is set to "parent"
+```
+
+If opening url in popup window :-
+
+```js
+const popup=window.open(`https://myapp.com/auto/#signup?resolve=opener`);
+
+window.addEvenListener(`message`, (ev) => {
+    if(ev.source == popup){
+        if(ev.origin !== "https://myapp.com"){
+            return;
+        }
+
+        const signupResult = ev.data;
+        //.... const {user, autoSigninToken} = signupResult;
+    }
+});
+
+//"resolve" is set to "opener"
+```
