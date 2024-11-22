@@ -1,6 +1,6 @@
 {
   "name": "@mingbye/deadbolt",
-  "version": "1.0.0",
+  "version": "1.0.2",
   "description": "A nodejs tool to help abstract accounts management related activity so you can focus on app productivity",
   "main": "index.js",
   "scripts": {

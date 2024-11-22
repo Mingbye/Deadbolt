@@ -267,6 +267,10 @@ Using the express example above (assuming server at address <https://myapp.com>)
 
 #### Getting the Deadbolt Auto result - Examples
 
+The result is a value that can be shipped in json [number | string | json-array | json-object].
+
+Note that if you need the result to be a string, set the search param resolveStringified to "true" then you will receive a json object stringified containing a "data" key when parsed.
+
 If opening url in iframe :-
 
 ```js
@@ -303,4 +307,24 @@ window.addEvenListener(`message`, (ev) => {
 });
 
 //"resolve" is set to "opener"
+```
+
+If opening url using a technology like Flutter (webview_flutter) where you get to use "JavaScript Channels". Set the target channel name to "ResolveChannel"
+
+
+```dart
+controller.addJavaScriptChannel(
+    "ResolveChannel",
+    onMessageReceived: (message) {
+        final Map signupResult = json.decode(message.message); //use resolveStringified in url because message.message only accepts Strings as of webview_flutter 4.10.0
+
+        final String user = signupResult["user"];
+        final String? autoSigninToken = signupResult["autoSigninToken"];
+        //....
+    }
+);
+    
+controller.loadRequest(Uri.parse('https://myapp.com/auto/#signup?resolve=channel&resolveStringified=true'));
+
+//"resolve" is set to "channel"
 ```
