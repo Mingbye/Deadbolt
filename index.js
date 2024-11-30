@@ -22,10 +22,12 @@ const mimeTypes = require("mime-types");
 class Deadbolt {
   #appName;
   #modules;
+  #onRemoteResolve;
 
-  constructor({ appName = undefined, modules } = {}) {
+  constructor({ appName = undefined, modules,onRemoteResolve } = {}) {
     this.#appName = appName;
     this.#modules = modules;
+    this.#onRemoteResolve=onRemoteResolve;
   }
 
   /**
@@ -845,6 +847,29 @@ class Deadbolt {
               }
 
               responder.status(404).end();
+            });
+          }
+        ) == true
+      ) {
+        return;
+      }
+
+      if (
+        routeRequestObj(
+          "POST",
+          "/remoteResolve",
+          (path, match) => {
+
+            bodyParser.json()(requestObj, responder, async () => {
+              try{
+                this.#onRemoteResolve(requestObj.body.key,requestObj.body.result);
+              }
+              catch(e){
+                responder.status(500).end();
+                return;
+              }
+
+              responder.status(200).end();
             });
           }
         ) == true
