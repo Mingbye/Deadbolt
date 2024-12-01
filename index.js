@@ -24,10 +24,10 @@ class Deadbolt {
   #modules;
   #onRemoteResolve;
 
-  constructor({ appName = undefined, modules,onRemoteResolve } = {}) {
+  constructor({ appName = undefined, modules, onRemoteResolve } = {}) {
     this.#appName = appName;
     this.#modules = modules;
-    this.#onRemoteResolve=onRemoteResolve;
+    this.#onRemoteResolve = onRemoteResolve;
   }
 
   /**
@@ -855,24 +855,22 @@ class Deadbolt {
       }
 
       if (
-        routeRequestObj(
-          "POST",
-          "/remoteResolve",
-          (path, match) => {
+        routeRequestObj("POST", "/remoteResolve", (path, match) => {
+          bodyParser.json()(requestObj, responder, async () => {
+            try {
+              this.#onRemoteResolve(
+                requestObj.body.key,
+                requestObj.body.result
+              );
+            } catch (e) {
+              console.error(e);
+              responder.status(500).end();
+              return;
+            }
 
-            bodyParser.json()(requestObj, responder, async () => {
-              try{
-                this.#onRemoteResolve(requestObj.body.key,requestObj.body.result);
-              }
-              catch(e){
-                responder.status(500).end();
-                return;
-              }
-
-              responder.status(200).end();
-            });
-          }
-        ) == true
+            responder.status(200).end();
+          });
+        }) == true
       ) {
         return;
       }
