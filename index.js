@@ -329,10 +329,12 @@ class Deadbolt {
                 let result = null;
                 try {
                   result = await targetMethod.confirmForeignCode(
-                    requestObj.body.codeWhere,
-                    requestObj.body.codeWhereIdentifier,
-                    requestObj.body.code,
-                    requestObj.body.nextStepToken
+                    {
+                      codeWhere: requestObj.body.codeWhere,
+                      codeWhereIdentifier: requestObj.body.codeWhereIdentifier,
+                      stepPassToken: requestObj.body.stepPassToken,
+                    },
+                    requestObj.body.code
                   );
                 } catch (e) {
                   if (e instanceof Deadbolt.ConfirmForeignCode.RejectedError) {
