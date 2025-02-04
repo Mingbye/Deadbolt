@@ -1,13 +1,7 @@
-import Signin from "./apps/Signin/index";
-import Signup from "./apps/Signup/index";
-import SolveAntiRobotChallenge from "./SolveAntiRobotChallenge";
-import ConfirmForeignCode from "./ConfirmForeignCode";
-import CreatePassword from "./CreatePassword";
-
-export {
-  Signin,
-  Signup,
-  SolveAntiRobotChallenge,
-  ConfirmForeignCode,
-  CreatePassword,
-};
+export class VariantError extends Error {
+  constructor(variant, customMessage) {
+    super(`${variant}: ${customMessage}`);
+    this.variant = variant;
+    this.customMessage = customMessage;
+  }
+}
